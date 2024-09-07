@@ -14,7 +14,7 @@ y2 = np.exp((r / t2) * x)
 plt.plot(x, y1, c="red", linestyle="dashed", label="C-14")
 plt.plot(x, y2, c="green", label="Ra-226")
 
-plt.margins(y=0)
+plt.margins(x=0, y=0)
 
 plt.xlabel("Time (years)")
 plt.ylabel("Fraction Remaining")
