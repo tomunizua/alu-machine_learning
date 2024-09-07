@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Question 2"""
+"""Question 2."""
 
 import numpy as np
 import matplotlib.pyplot as plt
