@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+"""Question 0."""
+
 import numpy as np
 import matplotlib.pyplot as plt
 
