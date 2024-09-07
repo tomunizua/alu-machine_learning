@@ -18,4 +18,3 @@ plt.title("Men's Height vs Weight")
 
 plt.show()
 
-
