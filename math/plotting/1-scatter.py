@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+"""Question 2"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -15,3 +17,4 @@ plt.ylabel("Weight (lbs)")
 plt.title("Men's Height vs Weight")
 
 plt.show()
+
