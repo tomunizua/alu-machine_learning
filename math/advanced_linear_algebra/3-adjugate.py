@@ -80,6 +80,7 @@ def cofactor(matrix):
 
     return cofactor_matrix
 
+
 def adjugate(matrix):
     """
     Calculates the adjugate of a matrix.
