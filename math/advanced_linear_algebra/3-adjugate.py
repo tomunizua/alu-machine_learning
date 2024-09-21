@@ -3,6 +3,7 @@
 Module to calculate the adjugate matrix of a matrix.
 """
 
+
 def determinant(matrix):
     """
     Calculates the determinant of a matrix.
