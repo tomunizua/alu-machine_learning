@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Calculates the summation"""
 
+
 def summation_i_squared(n):
     """
     Calculates the summation
