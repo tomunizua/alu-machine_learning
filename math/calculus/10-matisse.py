@@ -12,8 +12,8 @@ def poly_derivative(poly):
         return [0]
 
     derivative = [
-        coeff * power 
-        for power, coeff in enumerate(poly) 
+        coeff * power
+        for power, coeff in enumerate(poly)
         if power > 0
     ]
 
