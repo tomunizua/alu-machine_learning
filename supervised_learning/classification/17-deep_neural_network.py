@@ -1,72 +1,58 @@
 #!/usr/bin/env python3
 """
-This module defines the DeepNeuralNetwork class for binary classification.
+File defines a class that represents a deep neural network
 """
+
+
 import numpy as np
 
 
 class DeepNeuralNetwork:
     """
-    Define a deep neural network performing binary classification.
-
-    Attributes:
-        L (int): Number of layers in the neural network.
-        cache (dict): A dictionary to hold all intermediary values of
-            the network.
-        weights (dict): A dictionary to hold all weights and biases of
-            the network.
+    Class that represents a deep neural network
     """
 
     def __init__(self, nx, layers):
         """
-        Constructor for DeepNeuralNetwork class.
-
-        Args:
-            nx (int): Number of input features.
-            layers (list of int): Number of nodes in each layer of the
-                network.
-
-        Raises:
-            TypeError: If nx is not an integer.
-            ValueError: If nx is less than 1.
-            TypeError: If layers is not a list or an empty list.
-            TypeError: If elements in layers are not all positive integers.
+        Initializes a deep neural network
+        with one hidden layer
         """
-        if not isinstance(nx, int):
+        if type(nx) is not int:
             raise TypeError("nx must be an integer")
         if nx < 1:
             raise ValueError("nx must be a positive integer")
-        if not isinstance(layers, list) or not layers:
+        if type(layers) is not list or len(layers) < 1:
             raise TypeError("layers must be a list of positive integers")
-        if not all(map(lambda x: isinstance(x, int) and x > 0, layers)):
-            raise TypeError("layers must be a list of positive integers")
-
-        self.__L = len(layers)  # Number of layers
-        self.__cache = {}  # Dictionary to store forward propagation values
-        self.__weights = {}  # Dictionary to store weights and biases
-
-        # Initialize weights and biases
-        for i in range(1, self.__L + 1):
-            layer_size = layers[i - 1]
-            prev_layer_size = nx if i == 1 else layers[i - 2]
-
-            # He initialization weights
-            self.__weights[f'W{i}'] = \
-                np.random.randn(layer_size, prev_layer_size) \
-                * np.sqrt(2 / prev_layer_size)
-            self.__weights[f'b{i}'] = np.zeros((layer_size, 1))
+        weights = {}
+        previous = nx
+        for index, layer in enumerate(layers, 1):
+            if type(layer) is not int or layer < 0:
+                raise TypeError("layers must be a list of positive integers")
+            weights["b{}".format(index)] = np.zeros((layer, 1))
+            weights["W{}".format(index)] = (
+                np.random.randn(layer, previous) * np.sqrt(2 / previous))
+            previous = layer
+        self.__L = len(layers)
+        self.__cache = {}
+        self.__weights = weights
 
     @property
     def L(self):
-        """Getter for the number of layers."""
-        return self.__L
+        """
+        Getter for the private instance attribute __L
+        """
+        return (self.__L)
 
     @property
     def cache(self):
-        """Getter for the number of cache."""
-        return self.__cache
+        """
+        Getter for the private instance attribute __cache
+        """
+        return (self.__cache)
 
     @property
     def weights(self):
-        """Getter for the number of weights."""
-        return self.__weights
+        """
+        Getter for the private instance attribute __weights
+        """
+        return (self.__weights)
