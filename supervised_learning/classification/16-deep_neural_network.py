@@ -1,57 +1,125 @@
 #!/usr/bin/env python3
 """
-This module defines the DeepNeuralNetwork class for binary classification.
+    A class DeepNeuralNetwork that defines a deep neural
+    network performing binary classification
 """
+
 import numpy as np
 
 
 class DeepNeuralNetwork:
     """
-    Define a deep neural network performing binary classification.
-
-    Attributes:
-        L (int): Number of layers in the neural network.
-        cache (dict): A dictionary to hold all intermediary values of
-            the network.
-        weights (dict): A dictionary to hold all weights and biases of
-            the network.
+    A class DeepNeuralNetwork
     """
 
     def __init__(self, nx, layers):
-        """
-        Constructor for DeepNeuralNetwork class.
-
-        Args:
-            nx (int): Number of input features.
-            layers (list of int): Number of nodes in each layer of the
-                network.
-
-        Raises:
-            TypeError: If nx is not an integer.
-            ValueError: If nx is less than 1.
-            TypeError: If layers is not a list or an empty list.
-            TypeError: If elements in layers are not all positive integers.
-        """
+        """DeepNeuralNetwork class constructor"""
         if not isinstance(nx, int):
             raise TypeError("nx must be an integer")
         if nx < 1:
             raise ValueError("nx must be a positive integer")
-        if not isinstance(layers, list) or not layers:
-            raise TypeError("layers must be a list of positive integers")
-        if not all(map(lambda x: isinstance(x, int) and x > 0, layers)):
+        if not isinstance(layers, list) or len(layers) == 0:
             raise TypeError("layers must be a list of positive integers")
 
-        self.L = len(layers)  # Number of layers
-        self.cache = {}  # Dictionary to store forward propagation values
-        self.weights = {}  # Dictionary to store weights and biases
+        self.__L = len(layers)
+        self.__cache = {}
+        self.__weights = {}
+        self.nx = nx
+        self.layers = layers
 
-        # Initialize weights and biases
-        for i in range(1, self.L + 1):
-            layer_size = layers[i - 1]
-            prev_layer_size = nx if i == 1 else layers[i - 2]
+        # Initialize weights and biases and validate layers in one loop
+        for i in range(self.__L):
+            if not isinstance(layers[i], int) or layers[i] < 1:
+                raise TypeError("layers must be a list of positive integers")
+            if i == 0:
+                self.__weights["W1"] = np.random.randn(layers[i], nx) * np.sqrt(2 / nx)
+            else:
+                self.__weights["W" + str(i + 1)] = np.random.randn(
+                    layers[i], layers[i - 1]
+                ) * np.sqrt(2 / layers[i - 1])
+            self.__weights["b" + str(i + 1)] = np.zeros((layers[i], 1))
 
-            # He initialization weights
-            self.weights[f'W{i}'] = \
-                np.random.randn(layer_size, prev_layer_size) \
-                * np.sqrt(2 / prev_layer_size)
-            self.weights[f'b{i}'] = np.zeros((layer_size, 1))
+    # create the getter functions of the deep network
+    @property
+    def L(self):
+        """return the L attribute"""
+        return self.__L
+
+    @property
+    def cache(self):
+        """return the cache attribute"""
+        return self.__cache
+
+    @property
+    def weights(self):
+        """return the weights attribute"""
+        return self.__weights
+
+    def forward_prop(self, X):
+        """
+        Calculates the forward propagation of
+        the deep neural network
+        """
+        self.__cache["A0"] = X
+        for i in range(self.__L):
+            W = self.__weights["W{}".format(i + 1)]
+            b = self.__weights["b{}".format(i + 1)]
+            A = self.__cache["A{}".format(i)]
+            Z = np.matmul(W, A) + b
+            self.__cache["A{}".format(i + 1)] = 1 / (1 + np.exp(-Z))
+
+        return self.__cache["A{}".format(self.__L)], self.__cache
+
+    def cost(self, Y, A):
+        """
+        Calculates the cost of the model
+        """
+        m = Y.shape[1]
+        cost = -np.sum((Y * np.log(A)) + ((1 - Y) * np.log(1.0000001 - A))) / m
+        return cost
+
+    def evaluate(self, X, Y):
+        """
+        Evaluates the deep neural network
+        """
+        A, _ = self.forward_prop(X)
+        cost = self.cost(Y, A)
+        A = np.where(A >= 0.5, 1, 0)
+        return A, cost
+
+    def gradient_descent(self, Y, cache, alpha=0.05):
+        """
+        Calculates one pass of gradient descent on the deep neural network
+        """
+        m = Y.shape[1]
+        A = cache["A{}".format(self.__L)]
+        dZ = A - Y
+        for i in reversed(range(self.__L)):
+            A = cache["A{}".format(i + 1)]
+            A_prev = cache["A{}".format(i)]
+            W = self.__weights["W{}".format(i + 1)]
+            b = self.__weights["b{}".format(i + 1)]
+            dW = np.matmul(dZ, A_prev.T) / m
+            db = np.sum(dZ, axis=1, keepdims=True) / m
+            dZ = np.matmul(W.T, dZ) * A_prev * (1 - A_prev)
+            self.__weights["W{}".format(i + 1)] -= alpha * dW
+            self.__weights["b{}".format(i + 1)] -= alpha * db
+            self.__cache["A{}".format(i)] = A
+        return self.__weights, self.__cache
+
+    def train(self, X, Y, iterations=5000, alpha=0.05):
+        """
+        Trains the deep neural network
+        """
+        if type(iterations) is not int:
+            raise TypeError("iterations must be an integer")
+        if iterations < 1:
+            raise ValueError("iterations must be a positive integer")
+        if type(alpha) is not float:
+            raise TypeError("alpha must be a float")
+        if alpha < 0:
+            raise ValueError("alpha must be positive")
+        for i in range(iterations):
+            self.forward_prop(X)
+            self.gradient_descent(Y, self.__cache, alpha)
+        return self.evaluate(X, Y)
