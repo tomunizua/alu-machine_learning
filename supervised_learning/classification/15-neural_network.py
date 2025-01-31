@@ -1,47 +1,30 @@
 #!/usr/bin/env python3
 """
-This module defines the NeuralNetwork class for binary classification
-with one hidden layer.
+File defines a class that represents a
+neural network with one hidden layer
 """
+
+
 import numpy as np
-import matplotlib.pyplot as plt
 
 
 class NeuralNetwork:
     """
-    Define a neural network with one hidden layer performing binary
-    classification.
-
-    Attributes:
-        W1 (np.ndarray): Weights vector for the hidden layer.
-        b1 (np.ndarray): Bias for the hidden layer.
-        A1 (float): Activated output for the hidden layer.
-        W2 (np.ndarray): Weights vector for the output neuron.
-        b2 (float): Bias for the output neuron.
-        A2 (float): Activated output for the output neuron (prediction).
+    Class that represents a neural network with one hidden layer
     """
 
     def __init__(self, nx, nodes):
         """
-        Constructor for NeuralNetwork class.
-
-        Args:
-            nx (int): Number of input features.
-            nodes (int): Number of nodes in the hidden layer.
-
-        Raises:
-            TypeError: If nx or nodes are not integers.
-            ValueError: If nx or nodes are less than 1.
+        Initializes a neural network with one hidden layer
         """
-        if not isinstance(nx, int):
+        if type(nx) is not int:
             raise TypeError("nx must be an integer")
         if nx < 1:
             raise ValueError("nx must be a positive integer")
-        if not isinstance(nodes, int):
+        if type(nodes) is not int:
             raise TypeError("nodes must be an integer")
         if nodes < 1:
             raise ValueError("nodes must be a positive integer")
-
         self.__W1 = np.random.randn(nodes, nx)
         self.__b1 = np.zeros((nodes, 1))
         self.__A1 = 0
@@ -51,168 +34,132 @@ class NeuralNetwork:
 
     @property
     def W1(self):
-        """Getter for private attribute W1."""
-        return self.__W1
+        """
+        Getter for the weights vector for the hidden layer
+        """
+        return (self.__W1)
 
     @property
     def b1(self):
-        """Getter for private attribute b1."""
-        return self.__b1
+        """
+        Getter for the bias for the hidden layer
+        """
+        return (self.__b1)
 
     @property
     def A1(self):
-        """Getter for private attribute A1."""
-        return self.__A1
+        """
+        Getter for the activated output for the hidden layer
+        """
+        return (self.__A1)
 
     @property
     def W2(self):
-        """Getter for private attribute W2."""
-        return self.__W2
+        """
+        Getter for the weights vector for the output neuron
+        """
+        return (self.__W2)
 
     @property
     def b2(self):
-        """Getter for private attribute b2."""
-        return self.__b2
+        """
+        Getter for the bias for the output neuron
+        """
+        return (self.__b2)
 
     @property
     def A2(self):
-        """Getter for private attribute A2."""
-        return self.__A2
+        """
+        Getter for the activated output for the output neuron
+        """
+        return (self.__A2)
 
     def forward_prop(self, X):
         """
-        Calculates the forward propagation of the neural network using a
-        sigmoid activation function.
-
-        Args:
-            X (np.ndarray): Numpy array with shape (nx, m) containing the
-            input data.
-
-        Returns:
-            tuple: The activated outputs (__A1, __A2) of the hidden layer
-            and output layer respectively.
+        Computes the forward propagation of the neural network
         """
-        z1 = np.dot(self.__W1, X) + self.__b1
-        self.__A1 = 1 / (1 + np.exp(-z1))  # Sigmoid hidden layer.
-        z2 = np.dot(self.__W2, self.__A1) + self.__b2
-        self.__A2 = 1 / (1 + np.exp(-z2))  # Sigmoid output layer.
-        return self.__A1, self.__A2
+        z1 = np.matmul(self.W1, X) + self.b1
+        self.__A1 = 1 / (1 + (np.exp(-z1)))
+        z2 = np.matmul(self.W2, self.__A1) + self.b2
+        self.__A2 = 1 / (1 + (np.exp(-z2)))
+        return (self.A1, self.A2)
 
     def cost(self, Y, A):
         """
-        Calculate the cost of the model using logistic regression.
-
-        Args:
-            Y (np.ndarray): Correct labels for the input data, shape(1,m).
-            A (np.ndarray): Activated output of the neuron for each
-            example, shape(1,m).
-
-        Returns:
-            float: The logistic regression cost.
+        Computes the cost of the neural network
         """
         m = Y.shape[1]
-        cost = -(1 / m) * np.sum(Y * np.log(A) + (1 - Y)
-                                 * np.log(1.0000001 - A))
-        return cost
+        m_loss = np.sum((Y * np.log(A)) + ((1 - Y) * np.log(1.0000001 - A)))
+        cost = (1 / m) * (-(m_loss))
+        return (cost)
 
     def evaluate(self, X, Y):
         """
-        Evaluate the neural network's predictions.
-
-        Args:
-            X (np.ndarray): Numpy array with shape (nx, m) containing the
-            input data.
-            Y (np.ndarray): Numpy array with shape (1, m) containing the
-            correct labels for the input data.
-
-        Returns:
-            tuple: A tuple containing:
-                - Numpy array with shape (1, m) containing the predicted
-                labels for each example.
-                - The cost of the network.
+        Calculates the prediction and cost of the neural network
         """
         A1, A2 = self.forward_prop(X)
         cost = self.cost(Y, A2)
-        predictions = (A2 >= 0.5).astype(int)
-        return predictions, cost
+        prediction = np.where(A2 >= 0.5, 1, 0)
+        return (prediction, cost)
 
     def gradient_descent(self, X, Y, A1, A2, alpha=0.05):
         """
-        Perform one pass of gradient descen on the neural network.
-
-        Args:
-            X (np.ndarray): Input data, shape (nx, m).
-            Y (np.ndarray): True labels, shape (1, m).
-            A1 (np.ndarray): Output of the hidden layer.
-            A2 (np.ndarray): Predicted output.
-            alpha (float): Learning rate.
-
-        Updates:
-            __W1, __b1: Weights and bias of the hidden layer.
-            __W2, __b2: Weights and bias of the output layer.
+        Computes one pass of the gradient descent on the neural network
         """
         m = Y.shape[1]
-        dZ2 = A2 - Y
-        dW2 = np.dot(dZ2, A1.T) / m
-        db2 = np.sum(dZ2, axis=1, keepdims=True) / m
+        dz2 = (A2 - Y)
+        d__W2 = (1 / m) * (np.matmul(dz2, A1.transpose()))
+        d__b2 = (1 / m) * (np.sum(dz2, axis=1, keepdims=True))
+        dz1 = (np.matmul(self.W2.transpose(), dz2)) * (A1 * (1 - A1))
+        d__W1 = (1 / m) * (np.matmul(dz1, X.transpose()))
+        d__b1 = (1 / m) * (np.sum(dz1, axis=1, keepdims=True))
+        self.__W1 = self.W1 - (alpha * d__W1)
+        self.__b1 = self.b1 - (alpha * d__b1)
+        self.__W2 = self.W2 - (alpha * d__W2)
+        self.__b2 = self.b2 - (alpha * d__b2)
 
-        dZ1 = np.dot(self.__W2.T, dZ2) * A1 * (1 - A1)
-        dW1 = np.dot(dZ1, X.T) / m
-        db1 = np.sum(dZ1, axis=1, keepdims=True) / m
-
-        self.__W1 -= alpha * dW1
-        self.__b1 -= alpha * db1
-        self.__W2 -= alpha * dW2
-        self.__b2 -= alpha * db2
-
-    def train(self, X, Y, iterations=5000, alpha=0.05, verbose=True,
-              graph=True, step=100):
+    def train(self, X, Y, iterations=5000, alpha=0.05,
+              verbose=True, graph=True, step=100):
         """
-        Trains the neural network using forward propagation, gradient
-        descent and backpropagation.
-
-        Args:
-            X (numpy.ndarray): Input data of shape (nx, m).
-            Y (numpy.ndarray): True labels for the data of shape (1, m).
-            iterations (int): Number of iterations to train.
-            alpha (float): Learning rate.
-            verbose (bool): Whether to print training information.
-            graph (bool): Whether to plot the training cost.
-            step (int): Step size for printing and plotting.
-
-        Returns:
-            tuple: (numpy.ndarray, float)
-                - Predictions after training.
-                - Cost after training.
+        Training Function for the neural network
         """
-        if not isinstance(iterations, int):
-            raise TypeError('iterations must be an integer')
+        if type(iterations) is not int:
+            raise TypeError("iterations must be an integer")
         if iterations <= 0:
-            raise ValueError('iterations must be a positive integer')
-        if not isinstance(alpha, float):
-            raise TypeError('alpha must be a float')
+            raise ValueError("iterations must be a positive integer")
+        if type(alpha) is not float:
+            raise TypeError("alpha must be a float")
         if alpha <= 0:
-            raise ValueError('alpha must be positive')
+            raise ValueError("alpha must be positive")
         if verbose or graph:
-            if not isinstance(step, int):
-                raise TypeError('step must be an integer')
+            if type(step) is not int:
+                raise TypeError("step must be an integer")
             if step <= 0 or step > iterations:
-                raise ValueError('step must be positive and <= iterations')
-
-        costs = []
-        for i in range(iterations):
-            A1, A2 = self.forward_prop(X)
-            cost = self.cost(Y, A2)
-            self.gradient_descent(X, Y, A1, A2, alpha)
-            if (verbose) and (i % step == 0 or i == iterations - 1):
-                costs.append(cost)
-                print(f"Cost after {i} iterations: {cost}")
-
+                raise ValueError("step must be positive and <= iterations")
         if graph:
-            plt.plot(range(0, iterations + 1, step), costs)
-            plt.xlabel('Iteration')
-            plt.ylabel('Cost')
-            plt.title('Training Cost')
+            import matplotlib.pyplot as plt
+            x_points = np.arange(0, iterations + 1, step)
+            points = []
+        for itr in range(iterations):
+            A1, A2 = self.forward_prop(X)
+            if verbose and (itr % step) == 0:
+                cost = self.cost(Y, A2)
+                print("Cost after " + str(itr) + " iterations: " + str(cost))
+            if graph and (itr % step) == 0:
+                cost = self.cost(Y, A2)
+                points.append(cost)
+            self.gradient_descent(X, Y, A1, A2, alpha)
+        itr += 1
+        if verbose:
+            cost = self.cost(Y, A2)
+            print("Cost after " + str(itr) + " iterations: " + str(cost))
+        if graph:
+            cost = self.cost(Y, A2)
+            points.append(cost)
+            y_points = np.asarray(points)
+            plt.plot(x_points, y_points, 'b')
+            plt.xlabel("iteration")
+            plt.ylabel("cost")
+            plt.title("Training Cost")
             plt.show()
-
-        return self.evaluate(X, Y)
+        return (self.evaluate(X, Y))
