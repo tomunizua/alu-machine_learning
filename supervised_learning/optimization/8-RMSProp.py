@@ -1,20 +1,28 @@
 #!/usr/bin/env python3
-"""Module for creating a RMSProp optimizer in TensorFlow."""
+"""
+Defines function that creates the training op
+for a neural network in TensorFlow using
+the RMSProp optimization algorithm
+"""
+
+
 import tensorflow as tf
 
 
-def create_RMSProp_op(alpha, beta2, epsilon):
+def create_RMSProp_op(loss, alpha, beta2, epsilon):
     """
-    Set up the RMSProp optimization algorithm in TensorFlow.
+    Creates the training operation for a neural network in TensorFlow
+        using the RMSProp optimization algorithm
 
-    Parameters:
-    alpha (float): The learning rate.
-    beta2 (float): The RMSProp weight (discounting factor).
-    epsilon (float): A small number to avoid division by zero.
+    parameters:
+        loss: the loss of the network
+        alpha [float]: learning rate
+        beta2 [float]: RMSProp weight
+        epsilon [float]: small number to avoid division by zero
 
-    Returns:
-    tf.keras.optimizers.Optimizer: The optimizer configured with
-        the given alpha, beta2, and epsilon.
+    returns:
+        the RMSProp optimization operation
     """
-    return tf.keras.optimizers.RMSprop(learning_rate=alpha, rho=beta2,
-                                       epsilon=epsilon)
+    op = tf.train.RMSPropOptimizer(
+        alpha, decay=beta2, epsilon=epsilon).minimize(loss)
+    return op
