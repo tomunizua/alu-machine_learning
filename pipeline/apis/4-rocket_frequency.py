@@ -1,47 +1,29 @@
 #!/usr/bin/env python3
-"""Script to display the number of launches per rocket."""
+"""
+Uses the (unofficial) SpaceX API to print the number of launches per rocket as:
+<rocket name>: <number of launches>
+ordered by the number of launches in descending order or,
+if rockets have the same amount of launches, in alphabetical order
+"""
+
+
 import requests
-from collections import defaultdict
 
 
-if __name__ == '__main__':
-    # Get all launches
-    launches_url = "https://api.spacexdata.com/v4/launches"
-    launches_response = requests.get(launches_url)
-
-    if launches_response.status_code != 200:
-        print("Error fetching launches data")
-        exit(1)
-
-    launches = launches_response.json()
-
-    # Count launches per rocket
-    rocket_counts = defaultdict(int)
-    rocket_names = {}
-
-    # Get all rocket IDs and count launches
-    for launch in launches:
-        rocket_id = launch.get('rocket')
-        if rocket_id:
-            rocket_counts[rocket_id] += 1
-
-            # Get rocket name if we haven't already
-            if rocket_id not in rocket_names:
-                rocket_url = \
-                    f"https://api.spacexdata.com/v4/rockets/{rocket_id}"
-                rocket_response = requests.get(rocket_url)
-                if rocket_response.status_code == 200:
-                    rocket_data = rocket_response.json()
-                    rocket_names[rocket_id] = rocket_data.get('name',
-                                                              'Unknown')
-
-    # Create list of (name, count) tuples
-    rocket_list = [(rocket_names.get(rid, 'Unknown'), count)
-                   for rid, count in rocket_counts.items()]
-
-    # Sort by count (descending) and name (ascending)
-    rocket_list.sort(key=lambda x: (-x[1], x[0]))
-
-    # Print results
-    for name, count in rocket_list:
-        print(f"{name}: {count}")
+if __name__ == "__main__":
+    url = 'https://api.spacexdata.com/v4/launches'
+    results = requests.get(url).json()
+    rocketDict = {}
+    for launch in results:
+        rocket = launch.get('rocket')
+        url = 'https://api.spacexdata.com/v4/rockets/{}'.format(rocket)
+        results = requests.get(url).json()
+        rocket = results.get('name')
+        if rocketDict.get(rocket) is None:
+            rocketDict[rocket] = 1
+        else:
+            rocketDict[rocket] += 1
+    rocketList = sorted(rocketDict.items(), key=lambda kv: kv[0])
+    rocketList = sorted(rocketList, key=lambda kv: kv[1], reverse=True)
+    for rocket in rocketList:
+        print("{}: {}".format(rocket[0], rocket[1]))
