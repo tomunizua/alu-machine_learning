@@ -1,35 +1,37 @@
 #!/usr/bin/env python3
-"""Script to fetch the location of a specific GitHub user."""
+"""
+Uses the GitHub API to print the location of a specific user,
+where user is passed as first argument of the script with full API URL
+
+ex) "./2-user_location.py https://api.github.com/users/holbertonschool"
+"""
+
+
 import requests
-import sys
-from datetime import datetime
+from sys import argv
+from time import time
 
 
-if __name__ == '__main__':
-    if len(sys.argv) != 2:
-        print("Usage: ./2-user_location.py <GitHub API URL>")
-        sys.exit(1)
-
-    url = sys.argv[1]
-
-    response = requests.get(url)
-
-    if response.status_code == 200:
-        # User exists, print their location
-        user_data = response.json()
-        location = user_data.get('location', 'No location provided')
-        print(location)
-    elif response.status_code == 404:
-        # User not found
-        print("Not found")
-    elif response.status_code == 403:
-        # Rate limit reached, calculate reset time
-        reset_time = int(response.headers.get('X-Ratelimit-Reset', 0))
-        current_time = datetime.now()
-        reset_datetime = datetime.fromtimestamp(reset_time)
-        minutes_to_reset = \
-            (reset_datetime - current_time).total_seconds() // 60
-        print(f"Reset in {int(minutes_to_reset)} min")
-    else:
-        # Other errors
-        print(f"Error: {response.status_code}")
+if __name__ == "__main__":
+    if len(argv) < 2:
+        raise TypeError(
+            "Input must have the full API URL passed in as an argument: {}{}".
+            format('ex. "./2-user_location.py',
+                   'https://api.github.com/users/holbertonschool"'))
+    try:
+        url = argv[1]
+        results = requests.get(url)
+        if results.status_code == 403:
+            reset = results.headers.get('X-Ratelimit-Reset')
+            waitTime = int(reset) - time()
+            minutes = round(waitTime / 60)
+            print('Reset in {} min'.format(minutes))
+        else:
+            results = results.json()
+            location = results.get('location')
+            if location:
+                print(location)
+            else:
+                print('Not found')
+    except Exception as err:
+        print('Not found')
