@@ -1,41 +1,40 @@
 #!/usr/bin/env python3
-"""Script to display the first SpaceX launch details."""
+"""
+Uses the (unofficial) SpaceX API to print the upcoming launch as:
+<launch name> (<date>) <rocket name> - <launchpad name> (<launchpad locality>)
+
+The “upcoming launch” is the one which is the soonest from now, in UTC
+and if 2 launches have the same date, it's the first one in the API result.
+"""
+
+
 import requests
 
 
-def main():
-    """
-    Fetch and display the first SpaceX launch details in the required format.
-    """
-    # Fetch all launches
-    response = requests.get('https://api.spacexdata.com/v4/launches/upcoming')
-    launches = response.json()
-
-    # Find the first upcoming launch based on date_unix
-    first_launch = min(launches, key=lambda x: x['date_unix'])
-
-    # Extract relevant information from the launch
-    launch_name = first_launch['name']
-    date_local = first_launch['date_local']
-    rocket_id = first_launch['rocket']
-    launchpad_id = first_launch['launchpad']
-
-    # Fetch rocket information
-    rocket_response = requests.get(
-        f'https://api.spacexdata.com/v4/rockets/{rocket_id}')
-    rocket_name = rocket_response.json()['name']
-
-    # Fetch launchpad information
-    launchpad_response = requests.get(
-        f'https://api.spacexdata.com/v4/launchpads/{launchpad_id}')
-    launchpad_data = launchpad_response.json()
-    launchpad_name = launchpad_data['name']
-    launchpad_locality = launchpad_data['locality']
-
-    # Print the formatted information
-    print(f"{launch_name} ({date_local}) {rocket_name} - {launchpad_name}"
-          f" ({launchpad_locality})")
-
-
 if __name__ == "__main__":
-    main()
+    url = "https://api.spacexdata.com/v4/launches/upcoming"
+    results = requests.get(url).json()
+    dateCheck = float('inf')
+    launchName = None
+    rocket = None
+    launchPad = None
+    location = None
+    for launch in results:
+        launchDate = launch.get('date_unix')
+        if launchDate < dateCheck:
+            dateCheck = launchDate
+            date = launch.get('date_local')
+            launchName = launch.get('name')
+            rocket = launch.get('rocket')
+            launchPad = launch.get('launchpad')
+    if rocket:
+        rocket = requests.get('https://api.spacexdata.com/v4/rockets/{}'.
+                              format(rocket)).json().get('name')
+    if launchPad:
+        launchpad = requests.get('https://api.spacexdata.com/v4/launchpads/{}'.
+                                 format(launchPad)).json()
+        launchPad = launchpad.get('name')
+        location = launchpad.get('locality')
+
+    print("{} ({}) {} - {} ({})".format(
+        launchName, date, rocket, launchPad, location))
