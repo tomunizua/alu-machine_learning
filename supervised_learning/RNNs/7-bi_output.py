@@ -128,3 +128,4 @@ class BidirectionalCell:
             Y.append(y)
 
         return np.array(Y)
+    
